@@ -1,0 +1,37 @@
+{
+  "name": "lower_platform",
+  "version": "0.1.0",
+  "description": "",
+  "main": "App/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stepan-mitkin/lower_platform.git"
+  },
+  "keywords": [
+    "CRM",
+    "Microsoft",
+    "Dynamics",
+    "365",
+    "PowerPlatform"
+  ],
+  "author": "Stepan Mitkin",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/stepan-mitkin/lower_platform/issues"
+  },
+  "homepage": "https://github.com/stepan-mitkin/lower_platform#readme",
+  "dependencies": {
+    "@azure/msal-node": "^2.15.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "bootstrap": "^5.3.3",
+    "isomorphic-fetch": "^3.0.0",
+    "jquery": "^3.7.1",
+    "popper.js": "^1.16.1"
+  },
+  "devDependencies": {
+    "electron": "^20.0.0"
+  }
+}
