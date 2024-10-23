@@ -1,0 +1,9 @@
+const path = require("path");
+const { app, ipcMain, BrowserWindow } = require("electron");
+
+
+module()
+
+var mainWindow
+
+main()

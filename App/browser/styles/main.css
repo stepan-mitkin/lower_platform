@@ -1,0 +1,32 @@
+*,
+*:before,
+*:after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+}
+
+#loading {
+    display: inline-block;
+    position: fixed;
+    overflow: hidden;
+    left: 0px;
+    top: 0px;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+}
+
+#loading img {
+    display: inline-block;
+    width: 256px;
+    height: 256px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}

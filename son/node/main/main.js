@@ -1,0 +1,4 @@
+pfun()
+
+registerApplicationEvents()
+registerBrowserEvents()

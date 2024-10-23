@@ -1,0 +1,2 @@
+sonjs --output App/browser/js son/browser
+sonjs --commonjs --output App/node son/node
