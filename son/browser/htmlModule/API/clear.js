@@ -1,0 +1,2 @@
+fun(element)
+clearViaLastChild(element)

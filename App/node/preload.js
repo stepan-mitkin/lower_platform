@@ -1,6 +1,7 @@
 const {contextBridge, ipcRenderer} = require('electron');
 
 exposeToBrowser();
+console.log('preload completed');
 
 function exposeToBrowser() {
     contextBridge.exposeInMainWorld('renderer', {

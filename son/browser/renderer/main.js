@@ -1,3 +1,0 @@
-fun()
-
-console.log("main")

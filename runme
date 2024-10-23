@@ -1,0 +1,2 @@
+./buildson
+electron App/node/main.js

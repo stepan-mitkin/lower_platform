@@ -1,0 +1,4 @@
+module(action, timeoutMs, {type:"object"})
+
+timer = undefined
+latestArg = undefined
