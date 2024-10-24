@@ -1,6 +1,5 @@
 fun()
 
-setUpModules()
 setUpTheme()
 
 main = html.get("main")

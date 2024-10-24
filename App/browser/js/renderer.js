@@ -1,4 +1,6 @@
-var core;
-core = appCore();
-core.init();
-
+(function() {
+    window.html = htmlModule()
+    window.widgets = widgetTools()
+    var core = appCore();
+    core.init();
+})();
