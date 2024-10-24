@@ -1,6 +1,5 @@
 pfun(element, key, value)
 
-plot()
 yes(key === "text")
 newNode = document.createTextNode(value)
 element.appendChild(newNode)

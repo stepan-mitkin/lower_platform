@@ -1,11 +1,9 @@
 pfun()
 
-plot()
 no(redrawRequested)
 return
 
 section()
-plot()
 yes(redrawPending)
 return
 
