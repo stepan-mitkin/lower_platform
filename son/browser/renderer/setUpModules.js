@@ -1,3 +1,0 @@
-pfun()
-
-window.html = htmlModule()

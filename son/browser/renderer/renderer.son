@@ -1,3 +1,4 @@
 module()
 
-init()
+core = appCore()
+core.init()

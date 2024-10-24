@@ -1,0 +1,2 @@
+module(children, active, {type: "object"})
+

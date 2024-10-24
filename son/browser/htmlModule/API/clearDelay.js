@@ -1,0 +1,2 @@
+fun(timer)
+clearTimeout(timer)

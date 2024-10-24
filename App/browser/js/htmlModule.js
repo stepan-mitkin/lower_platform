@@ -19,6 +19,10 @@ function clear(element) {
     clearViaLastChild(element);
 }
 
+function clearDelay(timer) {
+    clearTimeout(timer);
+}
+
 function div() {
     var args;
     args = Array.from(arguments);
@@ -29,17 +33,23 @@ function get(id) {
     var element;
     element = document.getElementById(id);
     if (element) {
-        return element;
     } else {
         throw new Error('Element not found: ' + id);
     }
+    return element;
+}
+
+function makeWidget(render, unmount) {
+    return {
+        render: render,
+        unmount: unmount
+    };
 }
 
 function redrawAll() {
     console.log('redrawAll');
     redrawPending = false;
-    clear(rootElement);
-    uiTree.render(rootElement);
+    render(uiTree, rootElement);
 }
 
 function registerEvent(element, type, listener, options) {
@@ -52,13 +62,34 @@ function registerEvent(element, type, listener, options) {
     element.addEventListener(type, callback, options);
 }
 
+function render(widget, container) {
+    clear(container);
+    widget.render(container);
+}
+
 function requestRedraw() {
     redrawRequested = true;
+}
+
+function setDelay(action, timeout) {
+    var callback;
+    callback = () => {
+        redrawRequested = false;
+        action();
+        checkRedrawRequested();
+    };
+    return setTimeout(callback, timeout);
 }
 
 function setUiTree(element, node) {
     rootElement = element;
     uiTree = node;
+}
+
+function unmount(widget) {
+    if (widget.unmount) {
+        widget.unmount();
+    }
 }
 
 function applyArgument(element, arg) {
@@ -72,7 +103,11 @@ function applyArgument(element, arg) {
     }
     if (arg) {
         if (typeof arg === 'object') {
-            objFor(arg, (value, key) => setElementProperty(element, key, value));
+            if (arg.nodeType) {
+                element.appendChild(arg);
+            } else {
+                objFor(arg, (value, key) => setElementProperty(element, key, value));
+            }
         }
     }
 }
@@ -108,11 +143,16 @@ function checkRedrawRequested() {
 return {
     add: add,
     clear: clear,
+    clearDelay: clearDelay,
     div: div,
     get: get,
+    makeWidget: makeWidget,
     redrawAll: redrawAll,
     registerEvent: registerEvent,
+    render: render,
     requestRedraw: requestRedraw,
-    setUiTree: setUiTree
+    setDelay: setDelay,
+    setUiTree: setUiTree,
+    unmount: unmount
 };
 }

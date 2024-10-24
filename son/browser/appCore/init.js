@@ -1,9 +1,11 @@
 fun()
 
 setUpModules()
+setUpTheme()
 
 main = html.get("main")
-root = dummyNode("orangered", 50)
+compute(rootNode)
+root = rootNode
 html.setUiTree(main, root)
 
 delayedResize = debounce(onResize, 200)
