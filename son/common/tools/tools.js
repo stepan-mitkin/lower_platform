@@ -5,7 +5,3 @@ function objFor(obj, callback) {
         callback(value, key, obj)
     }
 }
-
-function tr(text) {
-    return text
-}

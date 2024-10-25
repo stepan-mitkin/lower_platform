@@ -1,8 +1,7 @@
 pfun(element, key, value)
 
 yes(key === "text")
-newNode = document.createTextNode(value)
-element.appendChild(newNode)
+addText(element, value)
 return
 
 section()

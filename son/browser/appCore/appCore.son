@@ -1,3 +1,4 @@
 module({type:"object"})
 
+globalStrings = {}
 appName = "LowerPlatform"

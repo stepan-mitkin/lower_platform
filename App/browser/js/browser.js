@@ -1,11 +1,13 @@
 function appCore() {
 
-var appName;
+var globalStrings, appName;
+globalStrings = {};
 appName = 'LowerPlatform';
 
 var explorerNode, rootNode;
-function init() {
+async function init() {
     var main, root, delayedResize;
+    await initStrings();
     setUpTheme();
     main = html.get('main');
     __computeAll_rootNode();
@@ -57,6 +59,18 @@ function setUpTheme() {
     document.documentElement.style.fontSize = globalTheme.fontSize;
 }
 
+async function initStrings() {
+    var language, response;
+    language = 'en-us';
+    response = await html.sendRequest('GET', './strings/' + language + '.json');
+    globalStrings = JSON.parse(response.body);
+    console.log(globalStrings);
+}
+
+function tr(text) {
+    return globalStrings[text] || text;
+}
+
 function dummyNode(color, padding) {
     return {
         render: container => {
@@ -75,22 +89,55 @@ function dummyNode(color, padding) {
     };
 }
 
+function imgSrc(filename) {
+    return './images/' + filename;
+}
+
+function makeH1(text) {
+    var div;
+    div = html.div({
+        text: text,
+        'font-size': '20px',
+        'line-height': '30px',
+        'font-weight': 'bold',
+        'text-align': 'center',
+        'margin-left': '5px',
+        'margin-right': '5px'
+    });
+    return div;
+}
+
+function makeImg(src) {
+    return html.img(imgSrc(src));
+}
+
 function renderWelcome(container) {
-    var top, bottom;
+    var topSize, logoImage, logoText, top, header, bottomClient, bottom;
+    topSize = '49px';
+    logoImage = makeImg('lower_platform_logo.png');
+    html.absRect(logoImage, '0px', '0px', topSize, topSize);
+    logoText = html.div({
+        text: appName,
+        'line-height': topSize,
+        color: globalTheme.textAlt,
+        'font-size': '30px',
+        'padding-left': '5px'
+    });
+    html.absLeftTop(logoText, topSize, '0px');
     top = html.div({
         background: globalTheme.background,
         'border-bottom': 'solid 1px ' + globalTheme.border
-    }, html.div({
-        text: appName,
-        color: globalTheme.textAlt,
-        position: 'absolute',
-        left: '0px',
+    }, logoImage, logoText);
+    header = makeH1(tr('CONNECT_TO_DATAVERSE'));
+    bottomClient = html.div({
+        background: 'orangered',
+        width: '700px',
         top: '0px',
-        'line-height': '49px',
-        'font-size': '30px',
-        'padding-left': '5px'
-    }));
-    bottom = html.div({ background: globalTheme.background });
+        height: '100%',
+        'max-width': '100%'
+    }, header);
+    html.centerHor(bottomClient);
+    bottom = html.div({ background: globalTheme.background }, bottomClient);
     widgets.arrangeTopBottom(top, 50, bottom, container);
 }
 
@@ -126,8 +173,37 @@ function clearViaLastChild(node) {
     }
 }
 
+function absLeftTop(element, left, top) {
+    element.style.position = 'absolute';
+    element.style.display = 'inline-block';
+    element.style.left = left;
+    element.style.top = top;
+}
+
+function absRect(element, left, top, width, height) {
+    element.style.position = 'absolute';
+    element.style.display = 'inline-block';
+    element.style.left = left;
+    element.style.top = top;
+    element.style.width = width;
+    element.style.height = height;
+}
+
 function add(parent, child) {
     parent.appendChild(child);
+}
+
+function addText(element, text) {
+    var newNode;
+    newNode = document.createTextNode(text);
+    element.appendChild(newNode);
+}
+
+function centerHor(element) {
+    element.style.position = 'absolute';
+    element.style.display = 'inline-block';
+    element.style.left = '50%';
+    element.style.transform = 'translate(-50%, 0px)';
 }
 
 function clear(element) {
@@ -151,6 +227,17 @@ function get(id) {
     } else {
         throw new Error('Element not found: ' + id);
     }
+    return element;
+}
+
+function img(src, alt) {
+    var element;
+    element = document.createElement('img');
+    element.draggable = false;
+    element.src = src;
+    element.alt = alt || '';
+    element.style.display = 'inline-block';
+    element.style.verticalAlign = 'middle';
     return element;
 }
 
@@ -184,6 +271,16 @@ function render(widget, container) {
 
 function requestRedraw() {
     redrawRequested = true;
+}
+
+function sendRequest(method, url, body, headers) {
+    return new Promise((resolve, reject) => {
+        try {
+            sendRequestInPromise(resolve, reject, method, url, body, headers);
+        } catch (ex) {
+            reject(ex);
+        }
+    });
 }
 
 function setDelay(action, timeout) {
@@ -235,10 +332,8 @@ function createElement(tag, args) {
 }
 
 function setElementProperty(element, key, value) {
-    var newNode;
     if (key === 'text') {
-        newNode = document.createTextNode(value);
-        element.appendChild(newNode);
+        addText(element, value);
         return;
     }
     element.style.setProperty(key, value);
@@ -252,20 +347,49 @@ function checkRedrawRequested() {
     if (redrawPending) {
         return;
     }
+    redrawPending = true;
     setTimeout(redrawAll, 0);
 }
 
+function onDataWhenReady(request, resolve) {
+    var result;
+    if (request.readyState === 4) {
+        result = {
+            body: request.responseText,
+            status: request.status
+        };
+        resolve(result);
+    }
+}
+
+function sendRequestInPromise(resolve, reject, method, url, body, headers) {
+    var request;
+    request = new XMLHttpRequest();
+    request.onreadystatechange = () => onDataWhenReady(request, resolve);
+    request.open(method, url, true);
+    if (headers) {
+        forObj(headers, (value, key) => request.setRequestHeader(key, value));
+    }
+    request.send(body);
+}
+
 return {
+    absLeftTop: absLeftTop,
+    absRect: absRect,
     add: add,
+    addText: addText,
+    centerHor: centerHor,
     clear: clear,
     clearDelay: clearDelay,
     div: div,
     get: get,
+    img: img,
     makeWidget: makeWidget,
     redrawAll: redrawAll,
     registerEvent: registerEvent,
     render: render,
     requestRedraw: requestRedraw,
+    sendRequest: sendRequest,
     setDelay: setDelay,
     setUiTree: setUiTree,
     unmount: unmount

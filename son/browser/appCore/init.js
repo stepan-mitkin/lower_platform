@@ -1,5 +1,6 @@
 fun()
 
+await initStrings()
 setUpTheme()
 
 main = html.get("main")

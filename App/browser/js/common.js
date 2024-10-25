@@ -36,7 +36,4 @@ function objFor(obj, callback) {
     }
 }
 
-function tr(text) {
-    return text
-}
 

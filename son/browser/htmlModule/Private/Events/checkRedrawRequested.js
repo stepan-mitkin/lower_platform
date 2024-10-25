@@ -1,5 +1,6 @@
 pfun()
 
+section()
 no(redrawRequested)
 return
 
@@ -8,4 +9,5 @@ yes(redrawPending)
 return
 
 section()
+redrawPending = true
 setTimeout(redrawAll, 0)
