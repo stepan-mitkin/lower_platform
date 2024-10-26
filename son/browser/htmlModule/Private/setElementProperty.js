@@ -4,5 +4,5 @@ yes(key === "text")
 addText(element, value)
 return
 
-section()
+yes(key === OTHER)
 element.style.setProperty(key, value)

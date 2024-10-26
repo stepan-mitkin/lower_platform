@@ -1,13 +1,6 @@
 pfun()
 
-section()
-no(redrawRequested)
-return
-
-section()
-yes(redrawPending)
-return
-
-section()
+yes(redrawRequested)
+no(redrawPending)
 redrawPending = true
 setTimeout(redrawAll, 0)

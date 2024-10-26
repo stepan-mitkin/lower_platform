@@ -224,10 +224,10 @@ function get(id) {
     var element;
     element = document.getElementById(id);
     if (element) {
+        return element;
     } else {
         throw new Error('Element not found: ' + id);
     }
-    return element;
 }
 
 function img(src, alt) {
@@ -305,20 +305,23 @@ function unmount(widget) {
 }
 
 function applyArgument(element, arg) {
-    if (typeof arg === 'string') {
-        element.className = arg;
-        return;
-    }
-    if (Array.isArray(arg)) {
-        arg.forEach(child => element.appendChild(child));
-        return;
-    }
     if (arg) {
-        if (typeof arg === 'object') {
-            if (arg.nodeType) {
-                element.appendChild(arg);
-            } else {
-                objFor(arg, (value, key) => setElementProperty(element, key, value));
+        if (typeof arg === 'string') {
+            element.className = arg;
+            return;
+        } else {
+            if (typeof arg === 'object') {
+                if (Array.isArray(arg)) {
+                    arg.forEach(child => element.appendChild(child));
+                    return;
+                } else {
+                    if (arg.nodeType) {
+                        element.appendChild(arg);
+                    } else {
+                        objFor(arg, (value, key) => setElementProperty(element, key, value));
+                        return;
+                    }
+                }
             }
         }
     }
@@ -335,20 +338,19 @@ function setElementProperty(element, key, value) {
     if (key === 'text') {
         addText(element, value);
         return;
+    } else {
+        element.style.setProperty(key, value);
     }
-    element.style.setProperty(key, value);
 }
 
 function checkRedrawRequested() {
     if (redrawRequested) {
-    } else {
-        return;
+        if (redrawPending) {
+        } else {
+            redrawPending = true;
+            setTimeout(redrawAll, 0);
+        }
     }
-    if (redrawPending) {
-        return;
-    }
-    redrawPending = true;
-    setTimeout(redrawAll, 0);
 }
 
 function onDataWhenReady(request, resolve) {
@@ -367,10 +369,14 @@ function sendRequestInPromise(resolve, reject, method, url, body, headers) {
     request = new XMLHttpRequest();
     request.onreadystatechange = () => onDataWhenReady(request, resolve);
     request.open(method, url, true);
+    setHeaders(request, headers);
+    request.send(body);
+}
+
+function setHeaders(request, headers) {
     if (headers) {
         forObj(headers, (value, key) => request.setRequestHeader(key, value));
     }
-    request.send(body);
 }
 
 return {
