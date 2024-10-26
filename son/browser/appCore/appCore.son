@@ -1,4 +1,11 @@
 module({type:"object"})
 
-globalStrings = {}
 appName = "LowerPlatform"
+globalStrings = {}
+connections = [
+    {url:"http://boscrm-transformation.crm4.dynamics.com/"},
+    {url:"http://boscrm-dev.crm4.dynamics.com/"},
+    {url:"http://boscrm-test.crm4.dynamics.com/"},
+    {url:"http://boscrm-uat.crm4.dynamics.com/"},
+    {url:"http://boscrm-prod.crm4.dynamics.com/"}    
+]

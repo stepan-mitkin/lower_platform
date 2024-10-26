@@ -1,18 +1,25 @@
 function appCore() {
 
-var globalStrings, appName;
-globalStrings = {};
+var appName, globalStrings, connections;
 appName = 'LowerPlatform';
+globalStrings = {};
+connections = [
+    { url: 'http://boscrm-transformation.crm4.dynamics.com/' },
+    { url: 'http://boscrm-dev.crm4.dynamics.com/' },
+    { url: 'http://boscrm-test.crm4.dynamics.com/' },
+    { url: 'http://boscrm-uat.crm4.dynamics.com/' },
+    { url: 'http://boscrm-prod.crm4.dynamics.com/' }
+];
 
 var explorerNode, rootNode;
 async function init() {
-    var main, root, delayedResize;
+    var main, delayedResize;
     await initStrings();
     setUpTheme();
+    widgets.initStyles();
     main = html.get('main');
     __computeAll_rootNode();
-    root = rootNode;
-    html.setUiTree(main, root);
+    html.setUiTree(main, rootNode);
     delayedResize = debounce(onResize, 200);
     window.addEventListener('resize', delayedResize.push);
     setTimeout(onResize, 0);
@@ -36,13 +43,13 @@ function setUpTheme() {
         background: 'white',
         text: 'black',
         textAlt: '#104a31',
-        border: '#c7d4bc',
-        hover: '#c7d4bc',
+        border: '#73de85',
+        hover: '#73de85',
         active: '#104a31',
         activeText: 'white',
-        buttonBackground: '#39f7a5',
+        buttonBackground: '#9ad9a4',
         buttonText: 'black',
-        buttonHover: '#c7d4bc',
+        buttonHover: '#73de85',
         buttonHoverText: 'black',
         buttonActive: '#104a31',
         buttonActiveText: 'white',
@@ -59,12 +66,15 @@ function setUpTheme() {
     document.documentElement.style.fontSize = globalTheme.fontSize;
 }
 
+function createNewConnection() {
+    console.log('createNewConnection');
+}
+
 async function initStrings() {
     var language, response;
     language = 'en-us';
     response = await html.sendRequest('GET', './strings/' + language + '.json');
     globalStrings = JSON.parse(response.body);
-    console.log(globalStrings);
 }
 
 function tr(text) {
@@ -93,6 +103,13 @@ function imgSrc(filename) {
     return './images/' + filename;
 }
 
+function makeConnectionLine(connection) {
+    return html.div({
+        'padding': '10px',
+        'text': connection.url
+    });
+}
+
 function makeH1(text) {
     var div;
     div = html.div({
@@ -112,7 +129,7 @@ function makeImg(src) {
 }
 
 function renderWelcome(container) {
-    var topSize, logoImage, logoText, top, header, bottomClient, bottom;
+    var topSize, logoImage, logoText, top, header, clientTop, clientBottom, bottomClient, bottom;
     topSize = '49px';
     logoImage = makeImg('lower_platform_logo.png');
     html.absRect(logoImage, '0px', '0px', topSize, topSize);
@@ -129,13 +146,15 @@ function renderWelcome(container) {
         'border-bottom': 'solid 1px ' + globalTheme.border
     }, logoImage, logoText);
     header = makeH1(tr('CONNECT_TO_DATAVERSE'));
+    clientTop = html.div(header, widgets.makeButtonPanel([widgets.makeSimpleButton(tr('BUTTON_NEW_CONNECTION'), createNewConnection)], []));
+    clientBottom = html.div({ 'overflow-y': 'auto' }, connections.map(makeConnectionLine));
     bottomClient = html.div({
-        background: 'orangered',
         width: '700px',
         top: '0px',
         height: '100%',
         'max-width': '100%'
-    }, header);
+    });
+    widgets.arrangeTopBottom(clientTop, 80, clientBottom, bottomClient);
     html.centerHor(bottomClient);
     bottom = html.div({ background: globalTheme.background }, bottomClient);
     widgets.arrangeTopBottom(top, 50, bottom, container);
@@ -214,6 +233,13 @@ function clearDelay(timer) {
     clearTimeout(timer);
 }
 
+function createStyle(header, body) {
+    return {
+        header: header,
+        body: body
+    };
+}
+
 function div() {
     var args;
     args = Array.from(arguments);
@@ -269,6 +295,18 @@ function render(widget, container) {
     widget.render(container);
 }
 
+function replaceStyleSheet(id, styles) {
+    var styleSheet, lines, content;
+    removeExisting(id);
+    styleSheet = document.createElement('style');
+    styleSheet.type = 'text/css';
+    document.head.appendChild(styleSheet);
+    lines = [];
+    styles.forEach(style => printStyle(style, lines));
+    content = lines.join('\n');
+    addText(styleSheet, content);
+}
+
 function requestRedraw() {
     redrawRequested = true;
 }
@@ -311,12 +349,12 @@ function applyArgument(element, arg) {
             return;
         } else {
             if (typeof arg === 'object') {
-                if (Array.isArray(arg)) {
-                    arg.forEach(child => element.appendChild(child));
-                    return;
+                if (arg.nodeType) {
+                    element.appendChild(arg);
                 } else {
-                    if (arg.nodeType) {
-                        element.appendChild(arg);
+                    if (Array.isArray(arg)) {
+                        arg.forEach(child => element.appendChild(child));
+                        return;
                     } else {
                         objFor(arg, (value, key) => setElementProperty(element, key, value));
                         return;
@@ -332,6 +370,14 @@ function createElement(tag, args) {
     element = document.createElement(tag);
     args.forEach(arg => applyArgument(element, arg));
     return element;
+}
+
+function removeExisting(id) {
+    var element;
+    element = document.getElementById(id);
+    if (element) {
+        element.remove();
+    }
 }
 
 function setElementProperty(element, key, value) {
@@ -379,6 +425,19 @@ function setHeaders(request, headers) {
     }
 }
 
+function appendStyleLine(body, i, lines) {
+    var line;
+    line = '  ' + body[i] + ': ' + body[i + 1] + ';';
+    lines.push(line);
+}
+
+function printStyle(style, lines) {
+    lines.push(style.header + ' {');
+    loop(0, style.body.length, 2, i => appendStyleLine(style.body, i, lines));
+    lines.push('}');
+    lines.push('');
+}
+
 return {
     absLeftTop: absLeftTop,
     absRect: absRect,
@@ -387,6 +446,7 @@ return {
     centerHor: centerHor,
     clear: clear,
     clearDelay: clearDelay,
+    createStyle: createStyle,
     div: div,
     get: get,
     img: img,
@@ -394,6 +454,7 @@ return {
     redrawAll: redrawAll,
     registerEvent: registerEvent,
     render: render,
+    replaceStyleSheet: replaceStyleSheet,
     requestRedraw: requestRedraw,
     sendRequest: sendRequest,
     setDelay: setDelay,
@@ -447,5 +508,69 @@ function arrangeTopBottom(top, topHeight, bottom, container) {
     html.add(container, bottom);
 }
 
-return { arrangeTopBottom: arrangeTopBottom };
+function initStyles() {
+    html.replaceStyleSheet('widgets-basic', [
+        html.createStyle('.normal-button', [
+            'display',
+            'inline-block',
+            'padding-left',
+            '10px',
+            'padding-right',
+            '10px',
+            'color',
+            globalTheme.buttonText,
+            'background',
+            globalTheme.buttonBackground,
+            'border-radius',
+            '3px',
+            'user-select',
+            'none',
+            'cursor',
+            'default',
+            'line-height',
+            '30px'
+        ]),
+        html.createStyle('.normal-button:hover', [
+            'color',
+            globalTheme.buttonHoverText,
+            'background',
+            globalTheme.buttonHover
+        ]),
+        html.createStyle('.normal-button:active', [
+            'color',
+            globalTheme.buttonActiveText,
+            'background',
+            globalTheme.buttonActive
+        ])
+    ]);
+}
+
+function makeButtonPanel(left, right) {
+    var padding, paddingPx, full, leftContainer, rightContainer;
+    padding = 10;
+    paddingPx = padding + 'px';
+    full = 'calc(100% - ' + padding * 2 + 'px)';
+    leftContainer = html.div({ 'text-align': 'left' }, left);
+    html.absRect(leftContainer, paddingPx, paddingPx, full, full);
+    rightContainer = html.div({ 'text-align': 'right' }, right);
+    html.absRect(rightContainer, paddingPx, paddingPx, full, full);
+    return html.div({
+        'height': '30px',
+        'position': 'relative'
+    }, leftContainer, rightContainer);
+}
+
+function makeSimpleButton(text, action) {
+    var button;
+    button = html.div('normal-button', { text: text });
+    html.registerEvent(button, 'click', action);
+    return button;
+}
+
+return {
+    arrangeTopBottom: arrangeTopBottom,
+    initStyles: initStyles,
+    makeButtonPanel: makeButtonPanel,
+    makeSimpleButton: makeSimpleButton
+};
 }

@@ -36,4 +36,9 @@ function objFor(obj, callback) {
     }
 }
 
+function loop(begin, end, step, callback) {
+    for (var i = begin; i < end; i += step) {
+        callback(i)
+    }
+}
 

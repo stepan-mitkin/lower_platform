@@ -5,3 +5,9 @@ function objFor(obj, callback) {
         callback(value, key, obj)
     }
 }
+
+function loop(begin, end, step, callback) {
+    for (var i = begin; i < end; i += step) {
+        callback(i)
+    }
+}

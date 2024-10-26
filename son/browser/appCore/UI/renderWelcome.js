@@ -26,15 +26,29 @@ top = html.div(
 
 header = makeH1(tr("CONNECT_TO_DATAVERSE"))
 
-bottomClient = html.div({
-        background: "orangered",
+clientTop = html.div(
+    header,
+    widgets.makeButtonPanel(
+        [widgets.makeSimpleButton(tr("BUTTON_NEW_CONNECTION"), createNewConnection)],
+        []
+    )
+)
+
+clientBottom = html.div(
+    {"overflow-y": "auto"},
+    connections.map(makeConnectionLine)
+)
+
+bottomClient = html.div(
+    {
         width: "700px",
         top: "0px",
         height: "100%",
         "max-width": "100%"
-    },
-    header
+    }
 )
+
+widgets.arrangeTopBottom(clientTop, 80, clientBottom, bottomClient)
 
 html.centerHor(bottomClient)
 bottom = html.div({
