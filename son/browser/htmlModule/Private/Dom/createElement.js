@@ -1,5 +1,5 @@
 pfun(tag, args)
 
 element = document.createElement(tag)
-args.forEach(arg => applyArgument(element, arg))
+forEach(args, applyArgument, element)
 return element

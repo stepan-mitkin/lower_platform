@@ -1,4 +1,4 @@
-pfun(element, arg)
+pfun(arg, element)
 
 yes(arg)
 yes(typeof arg === "string")
@@ -16,7 +16,7 @@ yes(arg)
 yes(typeof arg === "object")
 no(arg.nodeType)
 no(Array.isArray(arg))
-objFor(arg, (value, key) => setElementProperty(element, key, value))
+objFor(arg, setElementProperty, element)
 return
 
 yes(arg)

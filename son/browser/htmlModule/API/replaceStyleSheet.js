@@ -7,6 +7,6 @@ styleSheet.type = 'text/css'
 document.head.appendChild(styleSheet)
 
 lines = []
-styles.forEach(style => printStyle(style, lines))
+forEach(styles, printStyle, lines)
 content = lines.join("\n")
 addText(styleSheet, content)
