@@ -4,7 +4,13 @@ exposeToBrowser();
 console.log('preload completed');
 
 function exposeToBrowser() {
-    contextBridge.exposeInMainWorld('renderer', {
+    contextBridge.exposeInMainWorld('api', {
+        setItem: async (key, value) => {
+            return await ipcRenderer.invoke('set-item', key, value);
+        },
+        getItem: async key => {
+            return await ipcRenderer.invoke('get-item', key);
+        },
         sendLoginMessage: () => {
             ipcRenderer.send('LOGIN');
         },

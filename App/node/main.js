@@ -1,10 +1,14 @@
+const {LocalStorage} = require('node-localstorage');
+const appPackage = require('./package.json');
 const path = require('path');
+const os = require('os');
+const fs = require('fs').promises;
 const {app, ipcMain, BrowserWindow} = require('electron');
 
 var mainWindow;
 main();
-console.log('main completed');
 
+var storage;
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -20,9 +24,18 @@ function createWindowWhenNoWindows() {
     }
 }
 
-function main() {
+async function main() {
     registerApplicationEvents();
     registerBrowserEvents();
+    await __computeAll_storage();
+    storage.setItem('key1', 'value1');
+}
+
+async function makeDirIfNotExist(folder) {
+    try {
+        await fs.mkdir(folder, { recursive: true });
+    } catch (error) {
+    }
 }
 
 function registerApplicationEvents() {
@@ -37,5 +50,26 @@ function registerApplicationEvents() {
 }
 
 function registerBrowserEvents() {
+    ipcMain.handle('set-item', async (event, key, value) => {
+        storage.setItem(key, value);
+        return true;
+    });
+    ipcMain.handle('get-item', async (event, key) => {
+        const value = storage.getItem(key);
+        return value;
+    });
+}
+
+async function __computeAll_storage() {
+    storage = await __compute_storage();
+}
+
+async function __compute_storage() {
+    var folder, fullname, quota;
+    folder = os.homedir();
+    fullname = path.join(folder, '.' + appPackage.name);
+    await makeDirIfNotExist(fullname);
+    quota = 50 * 1024 * 1024;
+    return new LocalStorage(fullname, quota);
 }
 

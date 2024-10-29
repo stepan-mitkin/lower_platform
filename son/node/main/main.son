@@ -1,10 +1,16 @@
+const { LocalStorage } = require('node-localstorage');
+const appPackage = require("./package.json")
 const path = require("path");
+const os = require("os");
+const fs = require('fs').promises;
 const { app, ipcMain, BrowserWindow } = require("electron");
+
 
 
 module()
 
+
 var mainWindow
 
 main()
-console.log("main completed")
+

@@ -1,6 +1,12 @@
 pfun()
 
-contextBridge.exposeInMainWorld('renderer', {
+contextBridge.exposeInMainWorld('api', {
+    setItem: async (key, value) => {
+        return await ipcRenderer.invoke('set-item', key, value);
+    },
+    getItem: async (key) => {
+        return await ipcRenderer.invoke('get-item', key);
+    },
     sendLoginMessage: () => {
         ipcRenderer.send('LOGIN');
     },
@@ -17,3 +23,6 @@ contextBridge.exposeInMainWorld('renderer', {
         ipcRenderer.on('SHOW_WELCOME_MESSAGE', (event, ...args) => func(event, ...args));
     },
 });
+
+
+
