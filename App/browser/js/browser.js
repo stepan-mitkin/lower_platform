@@ -310,7 +310,7 @@ function replaceStyleSheet(id, styles) {
     styleSheet.type = 'text/css';
     document.head.appendChild(styleSheet);
     lines = [];
-    styles.forEach(style => printStyle(style, lines));
+    forEach(styles, printStyle, lines);
     content = lines.join('\n');
     addText(styleSheet, content);
 }
@@ -350,7 +350,7 @@ function unmount(widget) {
     }
 }
 
-function applyArgument(element, arg) {
+function applyArgument(arg, element) {
     if (arg) {
         if (typeof arg === 'string') {
             element.className = arg;
@@ -364,7 +364,7 @@ function applyArgument(element, arg) {
                         arg.forEach(child => element.appendChild(child));
                         return;
                     } else {
-                        objFor(arg, (value, key) => setElementProperty(element, key, value));
+                        objFor(arg, setElementProperty, element);
                         return;
                     }
                 }
@@ -376,7 +376,7 @@ function applyArgument(element, arg) {
 function createElement(tag, args) {
     var element;
     element = document.createElement(tag);
-    args.forEach(arg => applyArgument(element, arg));
+    forEach(args, applyArgument, element);
     return element;
 }
 
@@ -388,7 +388,7 @@ function removeExisting(id) {
     }
 }
 
-function setElementProperty(element, key, value) {
+function setElementProperty(key, value, element) {
     if (key === 'text') {
         addText(element, value);
         return;

@@ -1,4 +1,4 @@
-pfun(element, key, value)
+pfun(key, value, element)
 
 yes(key === "text")
 addText(element, value)
