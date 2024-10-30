@@ -20,6 +20,12 @@ window.globalTheme = {
     buttonBadText: "white",
     buttonBadActive: "#b3b3b3",
     buttonBadActiveText: "white",
+    buttonDefault: "#004d03",
+    buttonDefaultText: "white",
+    buttonDefaultHover: "#013003",
+    buttonDefaultHoverText: "white",        
+    buttonDefaultActive: "black",
+    buttonDefaultActiveText: "white",    
     fontFamily: "Arial",
     fontSize: "14px"
 }

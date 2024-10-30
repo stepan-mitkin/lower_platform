@@ -1,0 +1,4 @@
+module(text, callback, enabledClass, disabledClass, {type:"object"})
+
+var container = undefined
+var enabled = true

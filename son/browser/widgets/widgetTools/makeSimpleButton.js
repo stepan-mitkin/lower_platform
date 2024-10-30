@@ -1,10 +1,11 @@
 fun(text, action)
 
 button = html.div(
-    "normal-button",
+    "generic-button normal-button",
     {text: text}
 )
 
-html.registerEvent(button, "click", action)
+button.addEventListener("click", action)
+
 
 return button

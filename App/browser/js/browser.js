@@ -17,12 +17,12 @@ async function init() {
     await initStrings();
     setUpTheme();
     widgets.initStyles();
+    onResize();
     main = html.get('main');
     __computeAll_rootNode();
-    html.setUiTree(main, rootNode);
+    html.render(rootNode, main);
     delayedResize = debounce(onResize, 200);
     window.addEventListener('resize', delayedResize.push);
-    setTimeout(onResize, 0);
 }
 
 function onResize() {
@@ -35,7 +35,6 @@ function onResize() {
     main.style.top = '0px';
     main.style.width = window.innerWidth + 'px';
     main.style.height = window.innerHeight + 'px';
-    html.redrawAll();
 }
 
 function setUpTheme() {
@@ -59,6 +58,12 @@ function setUpTheme() {
         buttonBadText: 'white',
         buttonBadActive: '#b3b3b3',
         buttonBadActiveText: 'white',
+        buttonDefault: '#004d03',
+        buttonDefaultText: 'white',
+        buttonDefaultHover: '#013003',
+        buttonDefaultHoverText: 'white',
+        buttonDefaultActive: 'black',
+        buttonDefaultActiveText: 'white',
         fontFamily: 'Arial',
         fontSize: '14px'
     };
@@ -66,16 +71,14 @@ function setUpTheme() {
     document.documentElement.style.fontSize = globalTheme.fontSize;
 }
 
-async function createNewConnection() {
-    var existing, items, newValue;
-    console.log('createNewConnection');
-    existing = await window.api.getItem('bar-bar') || '[]';
-    console.log(existing);
-    items = JSON.parse(existing);
-    items.push(new Date().toString());
-    newValue = JSON.stringify(items);
-    await window.api.setItem('bar-bar', newValue);
-    console.log(newValue);
+function connected(connection) {
+    console.log('connected', connection);
+}
+
+function createNewConnection() {
+    var widget;
+    widget = connectionScreen(connected);
+    widgets.showCentralDialog(widget);
 }
 
 async function initStrings() {
@@ -83,6 +86,7 @@ async function initStrings() {
     language = 'en-us';
     response = await html.sendRequest('GET', './strings/' + language + '.json');
     globalStrings = JSON.parse(response.body);
+    window.tr = tr;
 }
 
 function tr(text) {
@@ -107,10 +111,6 @@ function dummyNode(color, padding) {
     };
 }
 
-function imgSrc(filename) {
-    return './images/' + filename;
-}
-
 function makeConnectionLine(connection) {
     return html.div({
         'padding': '10px',
@@ -118,28 +118,10 @@ function makeConnectionLine(connection) {
     });
 }
 
-function makeH1(text) {
-    var div;
-    div = html.div({
-        text: text,
-        'font-size': '20px',
-        'line-height': '30px',
-        'font-weight': 'bold',
-        'text-align': 'center',
-        'margin-left': '5px',
-        'margin-right': '5px'
-    });
-    return div;
-}
-
-function makeImg(src) {
-    return html.img(imgSrc(src));
-}
-
 function renderWelcome(container) {
     var topSize, logoImage, logoText, top, header, clientTop, clientBottom, bottomClient, bottom;
     topSize = '49px';
-    logoImage = makeImg('lower_platform_logo.png');
+    logoImage = widgets.makeImg('lower_platform_logo.png');
     html.absRect(logoImage, '0px', '0px', topSize, topSize);
     logoText = html.div({
         text: appName,
@@ -153,7 +135,7 @@ function renderWelcome(container) {
         background: globalTheme.background,
         'border-bottom': 'solid 1px ' + globalTheme.border
     }, logoImage, logoText);
-    header = makeH1(tr('CONNECT_TO_DATAVERSE'));
+    header = widgets.makeH1(tr('CONNECT_TO_DATAVERSE'));
     clientTop = html.div(header, widgets.makeButtonPanel([widgets.makeSimpleButton(tr('BUTTON_NEW_CONNECTION'), createNewConnection)], []));
     clientBottom = html.div({ 'overflow-y': 'auto' }, connections.map(makeConnectionLine));
     bottomClient = html.div({
@@ -189,8 +171,6 @@ return { init: init };
 
 function htmlModule() {
 
-var redrawRequested = false;
-var redrawPending = false;
 var rootElement = undefined;
 var uiTree = undefined;
 
@@ -237,10 +217,6 @@ function clear(element) {
     clearViaLastChild(element);
 }
 
-function clearDelay(timer) {
-    clearTimeout(timer);
-}
-
 function createStyle(header, body) {
     return {
         header: header,
@@ -282,22 +258,6 @@ function makeWidget(render, unmount) {
     };
 }
 
-function redrawAll() {
-    console.log('redrawAll');
-    redrawPending = false;
-    render(uiTree, rootElement);
-}
-
-function registerEvent(element, type, listener, options) {
-    var callback;
-    callback = evt => {
-        redrawRequested = false;
-        listener(evt);
-        checkRedrawRequested();
-    };
-    element.addEventListener(type, callback, options);
-}
-
 function render(widget, container) {
     clear(container);
     widget.render(container);
@@ -315,10 +275,6 @@ function replaceStyleSheet(id, styles) {
     addText(styleSheet, content);
 }
 
-function requestRedraw() {
-    redrawRequested = true;
-}
-
 function sendRequest(method, url, body, headers) {
     return new Promise((resolve, reject) => {
         try {
@@ -329,19 +285,27 @@ function sendRequest(method, url, body, headers) {
     });
 }
 
-function setDelay(action, timeout) {
-    var callback;
-    callback = () => {
-        redrawRequested = false;
-        action();
-        checkRedrawRequested();
-    };
-    return setTimeout(callback, timeout);
+function setText(element, text) {
+    clear(element);
+    addText(element, text);
 }
 
-function setUiTree(element, node) {
-    rootElement = element;
-    uiTree = node;
+function stretchToParent(element) {
+    element.style.position = 'absolute';
+    element.style.display = 'inline-block';
+    element.style.left = '0px';
+    element.style.top = '0px';
+    element.style.width = '100%';
+    element.style.height = '100%';
+}
+
+function stretchToScreen(element) {
+    element.style.position = 'fixed';
+    element.style.display = 'inline-block';
+    element.style.left = '0px';
+    element.style.top = '0px';
+    element.style.width = '100vw';
+    element.style.height = '100vh';
 }
 
 function unmount(widget) {
@@ -390,20 +354,12 @@ function removeExisting(id) {
 
 function setElementProperty(key, value, element) {
     if (key === 'text') {
-        addText(element, value);
-        return;
+        if (value) {
+            addText(element, value);
+            return;
+        }
     } else {
         element.style.setProperty(key, value);
-    }
-}
-
-function checkRedrawRequested() {
-    if (redrawRequested) {
-        if (redrawPending) {
-        } else {
-            redrawPending = true;
-            setTimeout(redrawAll, 0);
-        }
     }
 }
 
@@ -453,21 +409,182 @@ return {
     addText: addText,
     centerHor: centerHor,
     clear: clear,
-    clearDelay: clearDelay,
     createStyle: createStyle,
     div: div,
     get: get,
     img: img,
     makeWidget: makeWidget,
-    redrawAll: redrawAll,
-    registerEvent: registerEvent,
     render: render,
     replaceStyleSheet: replaceStyleSheet,
-    requestRedraw: requestRedraw,
     sendRequest: sendRequest,
-    setDelay: setDelay,
-    setUiTree: setUiTree,
+    setText: setText,
+    stretchToParent: stretchToParent,
+    stretchToScreen: stretchToScreen,
     unmount: unmount
+};
+}
+
+function connectionScreen(connected) {
+
+var active = true;
+var clientIdRequested = false;
+var clientIdInput;
+var dynamicsUrlInput;
+var errorMessage;
+var connectButton;
+var cancelButton;
+
+var clientId, connection, url;
+async function connect() {
+    html.clear(errorMessage);
+    connectButton.disable();
+    cancelButton.disable();
+    try {
+        await __computeAll_connection();
+    } catch (ex) {
+        handleError(ex.message);
+        return;
+    }
+    if (active) {
+        await window.api.setItem('clientid.txt', clientId);
+        html.hideCentralDialog();
+        connected(connection);
+    }
+}
+
+function handleError(message) {
+    html.setText(errorMessage, tr(message));
+    connectButton.enable();
+    cancelButton.enable();
+}
+
+function render(container) {
+    var controls;
+    clientIdInput = widgets.makeWideTextInput();
+    dynamicsUrlInput = widgets.makeWideTextInput();
+    errorMessage = widgets.makeErrorMessage();
+    connectButton = widgets.defaultButton(tr('BUTTON_LOGIN'), connect);
+    cancelButton = widgets.normalButton(tr('BUTTON_CANCEL'), widgets.hideCentralDialog);
+    controls = [
+        widgets.makeH1(tr('BUTTON_NEW_CONNECTION')),
+        widgets.makeSpacer10(),
+        widgets.makeWideLabel('Client Id'),
+        clientIdInput,
+        widgets.makeSpacer10(),
+        widgets.makeWideLabel(tr('DYNAMICS_URL')),
+        dynamicsUrlInput,
+        widgets.makeWideLabel(tr('FOR_EXAMPLE') + ', https://example.crm4.dynamics.com/'),
+        widgets.makeSpacer10(),
+        widgets.makeButtonPanel([connectButton.build()], [cancelButton.build()]),
+        widgets.makeSpacer10(),
+        errorMessage
+    ];
+    controls.forEach(widget => html.add(container, widget));
+    if (clientIdRequested) {
+    } else {
+        clientIdRequested = true;
+        requestClientId();
+    }
+}
+
+async function requestClientId() {
+    var savedClientId;
+    savedClientId = await window.api.getItem('clientid.txt');
+    if (active) {
+        if (clientIdInput.value) {
+        } else {
+            clientIdInput.value = savedClientId;
+        }
+    }
+}
+
+function unmount() {
+    active = false;
+}
+
+async function __computeAll_connection() {
+    clientId = __compute_clientId();
+    url = __compute_url();
+    connection = await __compute_connection();
+}
+
+function __compute_clientId() {
+    var result;
+    result = clientIdInput.value.trim();
+    if (result) {
+        return result;
+    } else {
+        throw new Error('ERR_CLIENT_ID_IS_EMPTY');
+    }
+}
+
+async function __compute_connection() {
+    var result;
+    result = await window.api.createConnection(clientId, url);
+    if (result.ok) {
+        return { url: url };
+    } else {
+        if (result.message) {
+            console.error(result);
+            throw new Error(result.message);
+        } else {
+            console.error(result);
+            throw new Error('ERR_COULD_NOT_CONNECT_TO_DATAVERSE');
+        }
+    }
+}
+
+function __compute_url() {
+    var trimmed;
+    trimmed = dynamicsUrlInput.value.trim();
+    if (trimmed) {
+        if (trimmed.endsWith('/')) {
+            return trimmed;
+        } else {
+            return trimmed + '/';
+        }
+    } else {
+        throw new Error('ERR_DYNAMICS_URL_IS_EMPTY');
+    }
+}
+
+return {
+    render: render,
+    unmount: unmount
+};
+}
+
+function genericButton(text, callback, enabledClass, disabledClass) {
+
+var container = undefined;
+var enabled = true;
+
+function action() {
+    if (enabled) {
+        callback();
+    }
+}
+
+function build() {
+    container = html.div(enabledClass, { text: text });
+    container.addEventListener('click', action);
+    return container;
+}
+
+function disable() {
+    enabled = false;
+    container.className = disabledClass;
+}
+
+function enable() {
+    enabled = true;
+    container.className = enabledClass;
+}
+
+return {
+    build: build,
+    disable: disable,
+    enable: enable
 };
 }
 
@@ -499,6 +616,10 @@ return {
 
 function widgetTools() {
 
+const Z_CENTRAL = 100;
+const Z_POPUP = 200;
+const Z_SNACK = 300;
+
 function arrangeTopBottom(top, topHeight, bottom, container) {
     top.style.position = 'fixed';
     top.style.display = 'inline-block';
@@ -516,19 +637,29 @@ function arrangeTopBottom(top, topHeight, bottom, container) {
     html.add(container, bottom);
 }
 
+function defaultButton(text, callback) {
+    return genericButton(text, callback, 'generic-button default-button', 'generic-button disabled-button');
+}
+
+function hideCentralDialog() {
+    var root;
+    root = html.get('question-root');
+    html.clear(root);
+}
+
+function imgSrc(filename) {
+    return './images/' + filename;
+}
+
 function initStyles() {
     html.replaceStyleSheet('widgets-basic', [
-        html.createStyle('.normal-button', [
+        html.createStyle('.generic-button', [
             'display',
             'inline-block',
             'padding-left',
             '10px',
             'padding-right',
             '10px',
-            'color',
-            globalTheme.buttonText,
-            'background',
-            globalTheme.buttonBackground,
             'border-radius',
             '3px',
             'user-select',
@@ -537,6 +668,12 @@ function initStyles() {
             'default',
             'line-height',
             '30px'
+        ]),
+        html.createStyle('.normal-button', [
+            'color',
+            globalTheme.buttonText,
+            'background',
+            globalTheme.buttonBackground
         ]),
         html.createStyle('.normal-button:hover', [
             'color',
@@ -549,36 +686,174 @@ function initStyles() {
             globalTheme.buttonActiveText,
             'background',
             globalTheme.buttonActive
+        ]),
+        html.createStyle('.default-button', [
+            'color',
+            globalTheme.buttonDefaultText,
+            'background',
+            globalTheme.buttonDefault
+        ]),
+        html.createStyle('.default-button:hover', [
+            'color',
+            globalTheme.buttonDefaultHoverText,
+            'background',
+            globalTheme.buttonDefaultHover
+        ]),
+        html.createStyle('.default-button:active', [
+            'color',
+            globalTheme.buttonDefaultActiveText,
+            'background',
+            globalTheme.buttonDefaultActive
+        ]),
+        html.createStyle('.disabled-button', [
+            'color',
+            globalTheme.buttonDisabledText,
+            'background',
+            globalTheme.buttonDisabled
+        ]),
+        html.createStyle('input[type="text"]', [
+            'padding',
+            '5px',
+            'font-family',
+            globalTheme.fontFamily,
+            'font-size',
+            globalTheme.fontSize,
+            'color',
+            globalTheme.text,
+            'background',
+            globalTheme.background
         ])
     ]);
 }
 
 function makeButtonPanel(left, right) {
     var padding, paddingPx, full, leftContainer, rightContainer;
-    padding = 10;
+    padding = 0;
     paddingPx = padding + 'px';
     full = 'calc(100% - ' + padding * 2 + 'px)';
     leftContainer = html.div({ 'text-align': 'left' }, left);
-    html.absRect(leftContainer, paddingPx, paddingPx, full, full);
+    leftContainer.style.position = 'absolute';
+    leftContainer.style.display = 'inline-block';
+    leftContainer.style.left = paddingPx;
+    leftContainer.style.top = paddingPx;
+    leftContainer.style.height = full;
     rightContainer = html.div({ 'text-align': 'right' }, right);
-    html.absRect(rightContainer, paddingPx, paddingPx, full, full);
+    rightContainer.style.position = 'absolute';
+    rightContainer.style.display = 'inline-block';
+    rightContainer.style.right = paddingPx;
+    rightContainer.style.top = paddingPx;
+    rightContainer.style.height = full;
     return html.div({
         'height': '30px',
         'position': 'relative'
     }, leftContainer, rightContainer);
 }
 
+function makeErrorMessage(text) {
+    return html.div({
+        text: text,
+        color: 'red'
+    });
+}
+
+function makeH1(text) {
+    var div;
+    div = html.div({
+        text: text,
+        'font-size': '20px',
+        'line-height': '30px',
+        'font-weight': 'bold',
+        'text-align': 'center',
+        'margin-left': '5px',
+        'margin-right': '5px'
+    });
+    return div;
+}
+
+function makeImg(src) {
+    return html.img(imgSrc(src));
+}
+
 function makeSimpleButton(text, action) {
     var button;
-    button = html.div('normal-button', { text: text });
-    html.registerEvent(button, 'click', action);
+    button = html.div('generic-button normal-button', { text: text });
+    button.addEventListener('click', action);
     return button;
+}
+
+function makeSpacer10() {
+    return html.div({ height: '10px' });
+}
+
+function makeSpacer5() {
+    return html.div({ height: '5px' });
+}
+
+function makeWideLabel(text) {
+    return html.div({
+        text: text,
+        'margin-top': '3px',
+        'margin-bottom': '3px'
+    });
+}
+
+function makeWideTextInput(value) {
+    var input;
+    input = document.createElement('input');
+    input.type = 'text';
+    input.style.width = '100%';
+    input.value = value || '';
+    return input;
+}
+
+function normalButton(text, callback) {
+    return genericButton(text, callback, 'generic-button normal-button', 'generic-button disabled-button');
+}
+
+function showCentralDialog(widget) {
+    var qroot, root, background, client;
+    hideCentralDialog();
+    qroot = html.get('question-root');
+    root = html.div();
+    html.add(qroot, root);
+    html.stretchToScreen(root);
+    background = html.div({
+        'z-order': Z_CENTRAL,
+        'background': 'rgba(0, 0, 0, 0.5)'
+    });
+    html.stretchToParent(background);
+    client = html.div({
+        'z-order': Z_CENTRAL + 1,
+        'padding': '10px',
+        'top': '0px',
+        'width': '400px',
+        'max-width': window.innerWidth + 'px',
+        'max-height': window.innerHeight + 'px',
+        'background': globalTheme.background,
+        'color': globalTheme.text,
+        'overflow-y': 'auto'
+    });
+    html.centerHor(client);
+    html.add(root, background);
+    html.add(root, client);
+    widget.render(client);
 }
 
 return {
     arrangeTopBottom: arrangeTopBottom,
+    defaultButton: defaultButton,
+    hideCentralDialog: hideCentralDialog,
     initStyles: initStyles,
     makeButtonPanel: makeButtonPanel,
-    makeSimpleButton: makeSimpleButton
+    makeErrorMessage: makeErrorMessage,
+    makeH1: makeH1,
+    makeImg: makeImg,
+    makeSimpleButton: makeSimpleButton,
+    makeSpacer10: makeSpacer10,
+    makeSpacer5: makeSpacer5,
+    makeWideLabel: makeWideLabel,
+    makeWideTextInput: makeWideTextInput,
+    normalButton: normalButton,
+    showCentralDialog: showCentralDialog
 };
 }

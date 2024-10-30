@@ -1,0 +1,11 @@
+module(connected, {type:"object"})
+
+var active = true
+var clientIdRequested = false
+
+var clientIdInput
+var dynamicsUrlInput
+var errorMessage
+var connectButton
+var cancelButton
+

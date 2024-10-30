@@ -1,4 +1,4 @@
-pfun(text)
+fun(text)
 
 div = html.div({
     text: text,

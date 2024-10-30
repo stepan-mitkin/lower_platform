@@ -1,6 +1,4 @@
 module({type:"object"})
 
-var redrawRequested = false
-var redrawPending = false
 var rootElement = undefined
 var uiTree = undefined

@@ -2,7 +2,7 @@ pfun(container)
 
 topSize = "49px"
 
-logoImage = makeImg("lower_platform_logo.png")
+logoImage = widgets.makeImg("lower_platform_logo.png")
 html.absRect(logoImage, "0px", "0px", topSize, topSize)
 
 logoText = html.div({
@@ -24,7 +24,7 @@ top = html.div(
     logoText
 )
 
-header = makeH1(tr("CONNECT_TO_DATAVERSE"))
+header = widgets.makeH1(tr("CONNECT_TO_DATAVERSE"))
 
 clientTop = html.div(
     header,

@@ -24,11 +24,9 @@ function createWindowWhenNoWindows() {
     }
 }
 
-async function main() {
+function main() {
     registerApplicationEvents();
     registerBrowserEvents();
-    await __computeAll_storage();
-    storage.setItem('key1', 'value1');
 }
 
 async function makeDirIfNotExist(folder) {
@@ -39,7 +37,8 @@ async function makeDirIfNotExist(folder) {
 }
 
 function registerApplicationEvents() {
-    app.on('ready', () => {
+    app.on('ready', async () => {
+        await __computeAll_storage();
         createWindow();
         mainWindow.loadFile(path.join(__dirname, '../browser/index.html'));
     });

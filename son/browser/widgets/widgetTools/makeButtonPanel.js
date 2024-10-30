@@ -1,6 +1,6 @@
 fun(left, right)
 
-padding = 10
+padding = 0
 paddingPx = padding + "px"
 full = "calc(100% - " + (padding * 2) + "px)"
 
@@ -9,26 +9,24 @@ leftContainer = html.div(
     left
 )
 
-html.absRect(
-    leftContainer,
-    paddingPx,
-    paddingPx,
-    full,
-    full
-)
+
+leftContainer.style.position = "absolute"
+leftContainer.style.display = "inline-block"
+leftContainer.style.left = paddingPx
+leftContainer.style.top = paddingPx
+leftContainer.style.height = full
+
 
 rightContainer = html.div(
     {"text-align": "right"},
     right
 )
 
-html.absRect(
-    rightContainer,
-    paddingPx,
-    paddingPx,
-    full,
-    full
-)
+rightContainer.style.position = "absolute"
+rightContainer.style.display = "inline-block"
+rightContainer.style.right = paddingPx
+rightContainer.style.top = paddingPx
+rightContainer.style.height = full
 
 return html.div(
     {

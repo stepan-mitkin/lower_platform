@@ -1,1 +1,5 @@
 module({type:"object"})
+
+const Z_CENTRAL = 100
+const Z_POPUP = 200
+const Z_SNACK = 300

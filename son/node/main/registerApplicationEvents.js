@@ -1,7 +1,8 @@
 pfun()
 
 
-app.on("ready", () => {
+app.on("ready", async () => {
+    compute(storage)
     createWindow();
     mainWindow.loadFile(path.join(__dirname, "../browser/index.html"));
 });
