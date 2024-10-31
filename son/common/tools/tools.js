@@ -21,3 +21,23 @@ function loop(begin, end, step, callback) {
         callback(i)
     }
 }
+
+function sortBy(array, property) {
+    var comparer = function(left, right) {
+        var leftValue = left[property]
+        var rightValue = right[property]
+        if (leftValue < rightValue) { return -1 }
+        if (leftValue > rightValue) { return 1 }
+        return 0
+    }
+    array.sort(comparer)
+}
+
+if (typeof module !== "undefined") {
+    module.exports = {
+        objFor: objFor,
+        forEach: forEach,
+        loop: loop,
+        sortBy: sortBy
+    }
+}

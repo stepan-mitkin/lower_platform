@@ -2,6 +2,7 @@
     "CONNECT_TO_DATAVERSE": "Connect to dataverse",
     "BUTTON_NEW_CONNECTION": "New connection",    
     "BUTTON_LOGIN": "Login",
+    "BUTTON_CONNECT": "Connect",
     "BUTTON_REMOVE": "Remove",
     "DYNAMICS_URL": "Dynamics 365 URL",
     "CLIENT_ID": "Client Id",
@@ -10,9 +11,13 @@
     "BUTTON_NO": "No",
     "BUTTON_OK": "Ok",
     "BUTTON_CANCEL": "Cancel",
+    "WAIT_WORKING": "Working...",
+    "WARN_WARNING": "Warning",
     "FOR_EXAMPLE": "For example",
-    "ARE_YOU_SURE_YOU_WANT_DO_DELETE_CONNECTION": "Are you sure you want to delete connection?",
+    "QUEST_ARE_YOU_SURE_YOU_WANT_TO_REMOVE_CONNECTION": "Are you sure you want to remove connection",
     "ERR_COULD_NOT_CONNECT_TO_DATAVERSE": "Could not connect to Dataverse",
     "ERR_CLIENT_ID_IS_EMPTY": "Client Id is empty",
+    "ERR_CONNECTION_EXISTS": "A connection to this URL exists",
+    "ERR_URL_MUST_START_WITH_HTTPS": "The URL must start with https://",
     "ERR_DYNAMICS_URL_IS_EMPTY": "Dynamics 365 URL is empty"
 }

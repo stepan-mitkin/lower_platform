@@ -41,7 +41,7 @@ class AuthProvider {
     // Function to handle authentication and get an access token
     async login() {
         const authWindow = new BrowserWindow({
-            width: 800,
+            width: 400,
             height: 600,
             webPreferences: {
                 nodeIntegration: false,

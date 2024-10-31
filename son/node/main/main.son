@@ -4,11 +4,12 @@ const path = require("path");
 const os = require("os");
 const fs = require('fs').promises;
 const { app, ipcMain, BrowserWindow } = require("electron");
-
+const authProvider = require("./authProvider")
 
 
 module()
 
+var authentications = {}
 
 var mainWindow
 

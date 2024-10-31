@@ -1,9 +1,9 @@
-prop()
+pfun()
 
 return multiView(
     {
         "welcome": html.makeWidget(renderWelcome),
-        "explorer": explorerNode
+        "explorer": html.makeWidget(renderExplorer)
     },
     "welcome"
 )

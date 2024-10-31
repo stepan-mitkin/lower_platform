@@ -16,9 +16,9 @@ window.globalTheme = {
     buttonActiveText: "white",
     buttonDisabled: "#b3b3b3",
     buttonDisabledText: "black",
-    buttonBad: "#b3b3b3",
+    buttonBad: "#7a0000",
     buttonBadText: "white",
-    buttonBadActive: "#b3b3b3",
+    buttonBadActive: "#360000",
     buttonBadActiveText: "white",
     buttonDefault: "#004d03",
     buttonDefaultText: "white",
@@ -27,7 +27,8 @@ window.globalTheme = {
     buttonDefaultActive: "black",
     buttonDefaultActiveText: "white",    
     fontFamily: "Arial",
-    fontSize: "14px"
+    fontSize: "16px",
+    headerFontSize: "26px",
 }
 
 document.documentElement.style.fontFamily = globalTheme.fontFamily

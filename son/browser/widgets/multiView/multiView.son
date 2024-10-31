@@ -1,2 +1,4 @@
 module(children, active, {type: "object"})
 
+myContainer = undefined
+

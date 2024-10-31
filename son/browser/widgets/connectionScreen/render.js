@@ -7,6 +7,7 @@ connectButton = widgets.defaultButton(tr("BUTTON_LOGIN"), connect)
 cancelButton = widgets.normalButton(tr("BUTTON_CANCEL"), widgets.hideCentralDialog)
 
 controls = [
+    widgets.makeSpacer10(),
     widgets.makeH1(tr("BUTTON_NEW_CONNECTION")),
     widgets.makeSpacer10(),
     widgets.makeWideLabel("Client Id"),

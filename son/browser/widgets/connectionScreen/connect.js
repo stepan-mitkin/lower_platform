@@ -12,5 +12,5 @@ try {
 
 yes(active)
 await window.api.setItem("clientid.txt", clientId)
-html.hideCentralDialog()
-connected(connection)
+widgets.hideCentralDialog()
+connected(url)

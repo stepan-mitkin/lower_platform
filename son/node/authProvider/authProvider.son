@@ -1,0 +1,15 @@
+const { app, ipcMain, BrowserWindow } = require("electron");
+const { PublicClientApplication, InteractionRequiredAuthError } = require('@azure/msal-node');
+const { shell } = require('electron');
+var axios = require("axios")
+const { LogLevel } = require("@azure/msal-node");
+
+
+module(clientId, url, {type:"object"})
+
+msalConfig = createMsalConfig(clientId)
+clientApplication = new PublicClientApplication(msalConfig)
+cache = clientApplication.getTokenCache()
+redirectUri = "http://localhost"
+authWindow = undefined
+authCodeUrlParams = undefined

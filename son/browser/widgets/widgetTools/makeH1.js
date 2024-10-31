@@ -2,7 +2,7 @@ fun(text)
 
 div = html.div({
     text: text,
-    "font-size": "20px",
+    "font-size": globalTheme.headerFontSize,
     "line-height": "30px",
     "font-weight": "bold",
     "text-align": "center",

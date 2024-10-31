@@ -1,3 +1,4 @@
-pfun(connection)
+pfun(url)
 
-console.log("connected", connection)
+
+openExplorer(url)

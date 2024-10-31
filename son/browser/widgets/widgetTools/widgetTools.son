@@ -3,3 +3,7 @@ module({type:"object"})
 const Z_CENTRAL = 100
 const Z_POPUP = 200
 const Z_SNACK = 300
+const Z_WORKING = 10000
+
+snackDiv = undefined
+snackTimer = undefined

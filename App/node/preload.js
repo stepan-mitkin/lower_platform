@@ -11,6 +11,21 @@ function exposeToBrowser() {
         getItem: async key => {
             return await ipcRenderer.invoke('get-item', key);
         },
+        createConnection: async (clientId, url) => {
+            return await ipcRenderer.invoke('create-connection', clientId, url);
+        },
+        removeConnection: async url => {
+            return await ipcRenderer.invoke('remove-connection', url);
+        },
+        getConnections: async () => {
+            return await ipcRenderer.invoke('get-connections');
+        },
+        getToken: async url => {
+            return await ipcRenderer.invoke('get-token', url);
+        },
+        connectTo: async url => {
+            return await ipcRenderer.invoke('connect-to', url);
+        },
         sendLoginMessage: () => {
             ipcRenderer.send('LOGIN');
         },

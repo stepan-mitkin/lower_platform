@@ -51,12 +51,26 @@ html.replaceStyleSheet(
             ]
         ),
         html.createStyle(
-            ".default-button:active",
+            ".bad-button",
             [
-                "color", globalTheme.buttonDefaultActiveText,
-                "background", globalTheme.buttonDefaultActive
+                "color", globalTheme.buttonBadText,
+                "background", globalTheme.buttonBad
             ]
-        ),        
+        ),
+        html.createStyle(
+            ".bad-button:hover",
+            [
+                "color", "white",
+                "background", "red"
+            ]
+        ),         
+        html.createStyle(
+            ".bad-button:active",
+            [
+                "color", globalTheme.buttonBadActiveText,
+                "background", globalTheme.buttonBadActive
+            ]
+        ),            
         html.createStyle(
             ".disabled-button",
             [
@@ -73,6 +87,12 @@ html.replaceStyleSheet(
                 "color", globalTheme.text,
                 "background", globalTheme.background
             ]
-        )        
+        ),
+        html.createStyle(
+            ".active-background:hover",
+            [
+                "background", globalTheme.hover
+            ]
+        )    
     ]
 )

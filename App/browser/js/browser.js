@@ -1,26 +1,20 @@
 function appCore() {
 
-var appName, globalStrings, connections;
+var appName, globalStrings, welcomeConnectionsDiv, baseUrl, rootNode;
 appName = 'LowerPlatform';
 globalStrings = {};
-connections = [
-    { url: 'http://boscrm-transformation.crm4.dynamics.com/' },
-    { url: 'http://boscrm-dev.crm4.dynamics.com/' },
-    { url: 'http://boscrm-test.crm4.dynamics.com/' },
-    { url: 'http://boscrm-uat.crm4.dynamics.com/' },
-    { url: 'http://boscrm-prod.crm4.dynamics.com/' }
-];
+welcomeConnectionsDiv = undefined;
+baseUrl = '';
+rootNode = undefined;
 
-var explorerNode, rootNode;
 async function init() {
-    var main, delayedResize;
+    var delayedResize;
     await initStrings();
     setUpTheme();
     widgets.initStyles();
     onResize();
-    main = html.get('main');
-    __computeAll_rootNode();
-    html.render(rootNode, main);
+    rootNode = makeRootNode();
+    redraw();
     delayedResize = debounce(onResize, 200);
     window.addEventListener('resize', delayedResize.push);
 }
@@ -35,6 +29,13 @@ function onResize() {
     main.style.top = '0px';
     main.style.width = window.innerWidth + 'px';
     main.style.height = window.innerHeight + 'px';
+}
+
+function redraw() {
+    var main;
+    console.log('redraw');
+    main = html.get('main');
+    html.render(rootNode, main);
 }
 
 function setUpTheme() {
@@ -54,9 +55,9 @@ function setUpTheme() {
         buttonActiveText: 'white',
         buttonDisabled: '#b3b3b3',
         buttonDisabledText: 'black',
-        buttonBad: '#b3b3b3',
+        buttonBad: '#7a0000',
         buttonBadText: 'white',
-        buttonBadActive: '#b3b3b3',
+        buttonBadActive: '#360000',
         buttonBadActiveText: 'white',
         buttonDefault: '#004d03',
         buttonDefaultText: 'white',
@@ -65,20 +66,48 @@ function setUpTheme() {
         buttonDefaultActive: 'black',
         buttonDefaultActiveText: 'white',
         fontFamily: 'Arial',
-        fontSize: '14px'
+        fontSize: '16px',
+        headerFontSize: '26px'
     };
     document.documentElement.style.fontFamily = globalTheme.fontFamily;
     document.documentElement.style.fontSize = globalTheme.fontSize;
 }
 
-function connected(connection) {
-    console.log('connected', connection);
+async function connectTo(url) {
+    var result, message;
+    widgets.showWorking();
+    result = await window.api.connectTo(url);
+    widgets.hideWorking();
+    if (result.ok) {
+        openExplorer(url);
+        if (result.ok) {
+        } else {
+            message = result.message || 'ERR_COULD_NOT_CONNECT_TO_DATAVERSE';
+            widgets.errorSnack(tr(message));
+        }
+    }
+}
+
+function connected(url) {
+    openExplorer(url);
 }
 
 function createNewConnection() {
     var widget;
     widget = connectionScreen(connected);
     widgets.showCentralDialog(widget);
+}
+
+async function removeConnection(url) {
+    var message, ok;
+    message = tr('QUEST_ARE_YOU_SURE_YOU_WANT_TO_REMOVE_CONNECTION') + ' ' + url + '?';
+    ok = await widgets.criticalQuestion(message, tr('BUTTON_REMOVE'), tr('BUTTON_CANCEL'));
+    if (ok) {
+        widgets.showWorking();
+        await window.api.removeConnection(url);
+        await fetchConnections();
+        widgets.hideWorking();
+    }
 }
 
 async function initStrings() {
@@ -111,15 +140,56 @@ function dummyNode(color, padding) {
     };
 }
 
+function makeRootNode() {
+    return multiView({
+        'welcome': html.makeWidget(renderWelcome),
+        'explorer': html.makeWidget(renderExplorer)
+    }, 'welcome');
+}
+
+function openExplorer(url) {
+    baseUrl = url;
+    rootNode.setActive('explorer');
+}
+
+async function fetchConnections() {
+    var connections, table;
+    html.clear(welcomeConnectionsDiv);
+    connections = await window.api.getConnections();
+    sortBy(connections, 'url');
+    table = document.createElement('table');
+    html.add(welcomeConnectionsDiv, table);
+    connections.forEach(connection => html.add(table, makeConnectionLine(connection)));
+}
+
 function makeConnectionLine(connection) {
-    return html.div({
-        'padding': '10px',
-        'text': connection.url
-    });
+    var url, row, left, right, remove;
+    url = connection.url;
+    row = document.createElement('tr');
+    row.className = 'active-background';
+    left = document.createElement('td');
+    left.style.padding = '10px';
+    left.style.lineHeight = '30px';
+    html.addText(left, url);
+    html.add(row, left);
+    right = document.createElement('td');
+    right.style.padding = '10px';
+    html.add(right, widgets.makeSimpleDefaultButton(tr('BUTTON_CONNECT'), () => connectTo(url)));
+    remove = widgets.makeSimpleBadButton(tr('BUTTON_REMOVE'), () => removeConnection(url));
+    remove.style.marginLeft = '10px';
+    html.add(right, remove);
+    html.add(row, right);
+    return row;
+}
+
+function renderExplorer(container) {
+    var dummy;
+    dummy = dummyNode('yellow', 20);
+    dummy.render(container);
 }
 
 function renderWelcome(container) {
-    var topSize, logoImage, logoText, top, header, clientTop, clientBottom, bottomClient, bottom;
+    var topSize, logoImage, logoText, top, header, buttonPanel, clientTop, bottomClient, bottom;
     topSize = '49px';
     logoImage = widgets.makeImg('lower_platform_logo.png');
     html.absRect(logoImage, '0px', '0px', topSize, topSize);
@@ -136,34 +206,21 @@ function renderWelcome(container) {
         'border-bottom': 'solid 1px ' + globalTheme.border
     }, logoImage, logoText);
     header = widgets.makeH1(tr('CONNECT_TO_DATAVERSE'));
-    clientTop = html.div(header, widgets.makeButtonPanel([widgets.makeSimpleButton(tr('BUTTON_NEW_CONNECTION'), createNewConnection)], []));
-    clientBottom = html.div({ 'overflow-y': 'auto' }, connections.map(makeConnectionLine));
+    buttonPanel = widgets.makeButtonPanel([widgets.makeSimpleButton(tr('BUTTON_NEW_CONNECTION'), createNewConnection)], []);
+    buttonPanel.style.marginLeft = '10px';
+    clientTop = html.div(header, buttonPanel);
+    welcomeConnectionsDiv = html.div({ 'overflow-y': 'auto' });
     bottomClient = html.div({
         width: '700px',
         top: '0px',
         height: '100%',
         'max-width': '100%'
     });
-    widgets.arrangeTopBottom(clientTop, 80, clientBottom, bottomClient);
+    widgets.arrangeTopBottom(clientTop, 80, welcomeConnectionsDiv, bottomClient);
     html.centerHor(bottomClient);
     bottom = html.div({ background: globalTheme.background }, bottomClient);
     widgets.arrangeTopBottom(top, 50, bottom, container);
-}
-
-function __computeAll_rootNode() {
-    explorerNode = __compute_explorerNode();
-    rootNode = __compute_rootNode();
-}
-
-function __compute_explorerNode() {
-    return dummyNode('yellow', 20);
-}
-
-function __compute_rootNode() {
-    return multiView({
-        'welcome': html.makeWidget(renderWelcome),
-        'explorer': explorerNode
-    }, 'welcome');
+    fetchConnections();
 }
 
 return { init: init };
@@ -211,6 +268,14 @@ function centerHor(element) {
     element.style.display = 'inline-block';
     element.style.left = '50%';
     element.style.transform = 'translate(-50%, 0px)';
+}
+
+function centerHorVer(element) {
+    element.style.position = 'absolute';
+    element.style.display = 'inline-block';
+    element.style.left = '50%';
+    element.style.top = '50%';
+    element.style.transform = 'translate(-50%, -50%)';
 }
 
 function clear(element) {
@@ -408,6 +473,7 @@ return {
     add: add,
     addText: addText,
     centerHor: centerHor,
+    centerHorVer: centerHorVer,
     clear: clear,
     createStyle: createStyle,
     div: div,
@@ -447,8 +513,8 @@ async function connect() {
     }
     if (active) {
         await window.api.setItem('clientid.txt', clientId);
-        html.hideCentralDialog();
-        connected(connection);
+        widgets.hideCentralDialog();
+        connected(url);
     }
 }
 
@@ -466,6 +532,7 @@ function render(container) {
     connectButton = widgets.defaultButton(tr('BUTTON_LOGIN'), connect);
     cancelButton = widgets.normalButton(tr('BUTTON_CANCEL'), widgets.hideCentralDialog);
     controls = [
+        widgets.makeSpacer10(),
         widgets.makeH1(tr('BUTTON_NEW_CONNECTION')),
         widgets.makeSpacer10(),
         widgets.makeWideLabel('Client Id'),
@@ -536,12 +603,16 @@ async function __compute_connection() {
 
 function __compute_url() {
     var trimmed;
-    trimmed = dynamicsUrlInput.value.trim();
+    trimmed = dynamicsUrlInput.value.trim().toLowerCase();
     if (trimmed) {
-        if (trimmed.endsWith('/')) {
-            return trimmed;
+        if (trimmed.startsWith('https://')) {
+            if (trimmed.endsWith('/')) {
+                return trimmed;
+            } else {
+                return trimmed + '/';
+            }
         } else {
-            return trimmed + '/';
+            throw new Error('ERR_URL_MUST_START_WITH_HTTPS');
         }
     } else {
         throw new Error('ERR_DYNAMICS_URL_IS_EMPTY');
@@ -590,7 +661,11 @@ return {
 
 function multiView(children, active) {
 
+var myContainer;
+myContainer = undefined;
+
 function render(container) {
+    myContainer = container;
     children[active].render(container);
 }
 
@@ -599,7 +674,7 @@ function setActive(newActive) {
     } else {
         html.unmount(children[active]);
         active = newActive;
-        html.requestRedraw();
+        html.render(children[active], myContainer);
     }
 }
 
@@ -616,9 +691,13 @@ return {
 
 function widgetTools() {
 
+var snackDiv, snackTimer;
 const Z_CENTRAL = 100;
 const Z_POPUP = 200;
 const Z_SNACK = 300;
+const Z_WORKING = 10000;
+snackDiv = undefined;
+snackTimer = undefined;
 
 function arrangeTopBottom(top, topHeight, bottom, container) {
     top.style.position = 'fixed';
@@ -637,13 +716,33 @@ function arrangeTopBottom(top, topHeight, bottom, container) {
     html.add(container, bottom);
 }
 
+function criticalQuestion(message, yesText, noText) {
+    return new Promise(resolve => {
+        var render, widget;
+        hideCentralDialog();
+        render = container => renderQuestion(container, message, yesText, noText, 'generic-button bad-button', resolve);
+        widget = html.makeWidget(render);
+        showCentralDialog(widget);
+    });
+}
+
 function defaultButton(text, callback) {
     return genericButton(text, callback, 'generic-button default-button', 'generic-button disabled-button');
+}
+
+function errorSnack(text) {
+    showSnack(text, 'darkred');
 }
 
 function hideCentralDialog() {
     var root;
     root = html.get('question-root');
+    html.clear(root);
+}
+
+function hideWorking() {
+    var root;
+    root = html.get('working-root');
     html.clear(root);
 }
 
@@ -699,11 +798,23 @@ function initStyles() {
             'background',
             globalTheme.buttonDefaultHover
         ]),
-        html.createStyle('.default-button:active', [
+        html.createStyle('.bad-button', [
             'color',
-            globalTheme.buttonDefaultActiveText,
+            globalTheme.buttonBadText,
             'background',
-            globalTheme.buttonDefaultActive
+            globalTheme.buttonBad
+        ]),
+        html.createStyle('.bad-button:hover', [
+            'color',
+            'white',
+            'background',
+            'red'
+        ]),
+        html.createStyle('.bad-button:active', [
+            'color',
+            globalTheme.buttonBadActiveText,
+            'background',
+            globalTheme.buttonBadActive
         ]),
         html.createStyle('.disabled-button', [
             'color',
@@ -722,6 +833,10 @@ function initStyles() {
             globalTheme.text,
             'background',
             globalTheme.background
+        ]),
+        html.createStyle('.active-background:hover', [
+            'background',
+            globalTheme.hover
         ])
     ]);
 }
@@ -760,7 +875,7 @@ function makeH1(text) {
     var div;
     div = html.div({
         text: text,
-        'font-size': '20px',
+        'font-size': globalTheme.headerFontSize,
         'line-height': '30px',
         'font-weight': 'bold',
         'text-align': 'center',
@@ -774,9 +889,23 @@ function makeImg(src) {
     return html.img(imgSrc(src));
 }
 
+function makeSimpleBadButton(text, action) {
+    var button;
+    button = html.div('generic-button bad-button', { text: text });
+    button.addEventListener('click', action);
+    return button;
+}
+
 function makeSimpleButton(text, action) {
     var button;
     button = html.div('generic-button normal-button', { text: text });
+    button.addEventListener('click', action);
+    return button;
+}
+
+function makeSimpleDefaultButton(text, action) {
+    var button;
+    button = html.div('generic-button default-button', { text: text });
     button.addEventListener('click', action);
     return button;
 }
@@ -839,21 +968,105 @@ function showCentralDialog(widget) {
     widget.render(client);
 }
 
+function showWorking() {
+    var root, message, back;
+    root = html.get('working-root');
+    message = html.div({
+        padding: '20px',
+        background: globalTheme.background,
+        opacity: 1,
+        color: globalTheme.text,
+        text: tr('WAIT_WORKING')
+    });
+    html.centerHorVer(message);
+    back = html.div({
+        'z-order': Z_WORKING,
+        opacity: 0.5,
+        background: globalTheme.background
+    }, message);
+    html.stretchToScreen(back);
+    html.add(root, back);
+}
+
+function hideSnack() {
+    if (snackDiv) {
+        snackDiv.remove();
+        snackDiv = undefined;
+        clearTimeout(snackTimer);
+        snackTimer = undefined;
+    }
+}
+
+function renderQuestion(container, message, yesText, noText, className, onAnswer) {
+    var confirm, confirmButton, cancel, cancelButton, controls;
+    confirm = () => {
+        widgets.hideCentralDialog();
+        onAnswer(true);
+    };
+    confirmButton = makeSimpleButton(yesText, confirm);
+    confirmButton.className = className || 'generic-button normal-button';
+    cancel = () => {
+        widgets.hideCentralDialog();
+        onAnswer(false);
+    };
+    cancelButton = makeSimpleButton(noText, cancel);
+    controls = [
+        widgets.makeSpacer10(),
+        widgets.makeH1(tr('WARN_WARNING')),
+        widgets.makeSpacer10(),
+        widgets.makeWideLabel(message),
+        widgets.makeSpacer10(),
+        widgets.makeButtonPanel([confirmButton], [cancelButton]),
+        widgets.makeSpacer10()
+    ];
+    controls.forEach(widget => html.add(container, widget));
+}
+
+function showSnack(text, border) {
+    var mainDiv;
+    hideSnack();
+    snackDiv = html.div({
+        'position': 'fixed',
+        'display': 'inline-block',
+        'z-order': Z_SNACK,
+        'background': globalTheme.background,
+        'color': globalTheme.text,
+        'padding': '20px',
+        'width': '400px',
+        'max-width': 'calc(100vw - 40px)',
+        'right': '20px',
+        'top': '20px',
+        'border': 'solid 2px ' + border,
+        'border-left': 'solid 10px ' + border,
+        'text': text,
+        'box-shadow': '0px 0px 20px 4px rgba(0,0,0,0.38)'
+    });
+    mainDiv = html.get('main');
+    html.add(mainDiv, snackDiv);
+    snackTimer = setTimeout(hideSnack, 5000);
+}
+
 return {
     arrangeTopBottom: arrangeTopBottom,
+    criticalQuestion: criticalQuestion,
     defaultButton: defaultButton,
+    errorSnack: errorSnack,
     hideCentralDialog: hideCentralDialog,
+    hideWorking: hideWorking,
     initStyles: initStyles,
     makeButtonPanel: makeButtonPanel,
     makeErrorMessage: makeErrorMessage,
     makeH1: makeH1,
     makeImg: makeImg,
+    makeSimpleBadButton: makeSimpleBadButton,
     makeSimpleButton: makeSimpleButton,
+    makeSimpleDefaultButton: makeSimpleDefaultButton,
     makeSpacer10: makeSpacer10,
     makeSpacer5: makeSpacer5,
     makeWideLabel: makeWideLabel,
     makeWideTextInput: makeWideTextInput,
     normalButton: normalButton,
-    showCentralDialog: showCentralDialog
+    showCentralDialog: showCentralDialog,
+    showWorking: showWorking
 };
 }
