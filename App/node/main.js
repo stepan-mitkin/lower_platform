@@ -76,18 +76,10 @@ function registerBrowserEvents() {
         const value = storage.getItem(key);
         return value;
     });
-    ipcMain.handle('get-token', async (event, url) => {
-        console.log('get-token', url);
-        return 'token ' + url;
-    });
+    ipcMain.handle('get-token', getToken);
     ipcMain.handle('create-connection', createConnection);
     ipcMain.handle('remove-connection', removeConnection);
-    ipcMain.handle('connect-to', connectTo);
     ipcMain.handle('get-connections', getConnections);
-}
-
-function connectTo(event, url) {
-    return { ok: true };
 }
 
 async function createConnection(event, clientId, url) {
@@ -113,34 +105,82 @@ function getConnections() {
     });
 }
 
+async function getToken(event, url) {
+    var id, conn, auth, result;
+    id = findConnection(url);
+    conn = loadConnectionData(id);
+    auth = getOrDeserializeAuth(conn);
+    result = await auth.getToken();
+    if (result.ok) {
+        startSaving(auth, url, id);
+        return result;
+    } else {
+        return result;
+    }
+}
+
 function removeConnection(event, url) {
-    var id, key;
+    var id, key, key2;
     id = findConnection(url);
     if (id) {
         delete authentications[url];
         removeConnectionFromMap(url);
         key = id + '-conn.json';
         storage.removeItem(key);
+        key2 = id + '-auth.json';
+        storage.removeItem(key2);
     }
+}
+
+function getOrDeserializeAuth(conn) {
+    var id, clientId, url, auth, key, content;
+    id = conn.id;
+    if (id in authentications) {
+        return authentications[id];
+    } else {
+        clientId = conn.clientId;
+        url = conn.url;
+        auth = authProvider(clientId, url);
+        key = id + '-auth.json';
+        content = storage.getItem(key);
+        auth.load(conn.account, content);
+        return auth;
+    }
+}
+
+function loadConnectionData(id) {
+    return loadJson(id + '-conn');
 }
 
 function saveConnectionData(id, connectionData) {
     saveJson(id + '-conn', connectionData);
 }
 
+function startSaving(auth, url, id) {
+    var save;
+    authentications[url] = auth;
+    save = data => {
+        var key;
+        key = id + '-auth.json';
+        storage.setItem(key, data);
+    };
+    auth.registerSave(save);
+}
+
 async function uiLogon(clientId, url) {
-    var provider, result, id, connectionData;
-    provider = authProvider(clientId, url);
-    result = await provider.login();
+    var auth, result, id, connectionData;
+    auth = authProvider(clientId, url);
+    result = await auth.login();
     if (result.ok) {
         id = createConnectionId(url);
         connectionData = {
+            id: id,
             url: url,
-            token: result.token,
-            clientId: clientId
+            clientId: clientId,
+            account: result.account
         };
         saveConnectionData(id, connectionData);
-        authentications[url] = provider;
+        startSaving(auth, url, id);
         return { ok: true };
     } else {
         return result;

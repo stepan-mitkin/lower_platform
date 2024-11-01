@@ -7,6 +7,7 @@ authWindow = new BrowserWindow({
         nodeIntegration: false,
     }
 })
+authWindow.setMenu(null)
 
 // Get the Auth URL from MSAL
 authCodeUrlParams = {
@@ -26,3 +27,5 @@ authWindow.webContents.on('will-redirect', async (event, newUrl) => {
         completed({ok:false, message:ex.message})
     }
 })
+
+authWindow.on('close', () => onClose(completed))

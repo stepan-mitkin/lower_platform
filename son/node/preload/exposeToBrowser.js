@@ -18,10 +18,7 @@ contextBridge.exposeInMainWorld('api', {
     },    
     getToken: async (url) => {
         return await ipcRenderer.invoke('get-token', url);
-    },  
-    connectTo: async (url) => {
-        return await ipcRenderer.invoke('connect-to', url);
-    },     
+    }, 
     sendLoginMessage: () => {
         ipcRenderer.send('LOGIN');
     },

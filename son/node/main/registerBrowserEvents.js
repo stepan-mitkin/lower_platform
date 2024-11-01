@@ -10,12 +10,7 @@ ipcMain.handle('get-item', async (event, key) => {
     return value;
 });
 
-ipcMain.handle('get-token', async (event, url) => {
-    console.log("get-token", url)
-    return "token " + url;
-});
-
+ipcMain.handle('get-token', getToken)
 ipcMain.handle('create-connection', createConnection)
 ipcMain.handle('remove-connection', removeConnection)
-ipcMain.handle('connect-to', connectTo)
 ipcMain.handle('get-connections', getConnections)

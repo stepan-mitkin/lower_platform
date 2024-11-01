@@ -13,3 +13,6 @@ cache = clientApplication.getTokenCache()
 redirectUri = "http://localhost"
 authWindow = undefined
 authCodeUrlParams = undefined
+authCompleted = false
+account = undefined
+save = undefined

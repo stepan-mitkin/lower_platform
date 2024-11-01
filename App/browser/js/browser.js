@@ -73,23 +73,22 @@ function setUpTheme() {
     document.documentElement.style.fontSize = globalTheme.fontSize;
 }
 
+function connected(url) {
+    openExplorer(url);
+}
+
 async function connectTo(url) {
     var result, message;
     widgets.showWorking();
-    result = await window.api.connectTo(url);
-    widgets.hideWorking();
+    result = await window.api.getToken(url);
     if (result.ok) {
         openExplorer(url);
-        if (result.ok) {
-        } else {
-            message = result.message || 'ERR_COULD_NOT_CONNECT_TO_DATAVERSE';
-            widgets.errorSnack(tr(message));
-        }
+        return;
+    } else {
+        widgets.hideWorking();
+        message = result.message || 'ERR_COULD_NOT_CONNECT_TO_DATAVERSE';
+        widgets.errorSnack(tr(message));
     }
-}
-
-function connected(url) {
-    openExplorer(url);
 }
 
 function createNewConnection() {
@@ -147,9 +146,13 @@ function makeRootNode() {
     }, 'welcome');
 }
 
-function openExplorer(url) {
+async function openExplorer(url) {
+    var token;
     baseUrl = url;
+    token = await window.api.getToken(url);
+    console.log(token);
     rootNode.setActive('explorer');
+    widgets.hideWorking();
 }
 
 async function fetchConnections() {
@@ -208,7 +211,7 @@ function renderWelcome(container) {
     header = widgets.makeH1(tr('CONNECT_TO_DATAVERSE'));
     buttonPanel = widgets.makeButtonPanel([widgets.makeSimpleButton(tr('BUTTON_NEW_CONNECTION'), createNewConnection)], []);
     buttonPanel.style.marginLeft = '10px';
-    clientTop = html.div(header, buttonPanel);
+    clientTop = html.div(widgets.makeSpacer10(), header, buttonPanel);
     welcomeConnectionsDiv = html.div({ 'overflow-y': 'auto' });
     bottomClient = html.div({
         width: '700px',
@@ -216,7 +219,7 @@ function renderWelcome(container) {
         height: '100%',
         'max-width': '100%'
     });
-    widgets.arrangeTopBottom(clientTop, 80, welcomeConnectionsDiv, bottomClient);
+    widgets.arrangeTopBottom(clientTop, 90, welcomeConnectionsDiv, bottomClient);
     html.centerHor(bottomClient);
     bottom = html.div({ background: globalTheme.background }, bottomClient);
     widgets.arrangeTopBottom(top, 50, bottom, container);

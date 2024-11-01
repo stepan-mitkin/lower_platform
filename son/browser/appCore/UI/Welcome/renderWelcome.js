@@ -34,6 +34,7 @@ buttonPanel = widgets.makeButtonPanel(
 buttonPanel.style.marginLeft = "10px"
 
 clientTop = html.div(
+    widgets.makeSpacer10(),
     header,
     buttonPanel
 )
@@ -51,7 +52,7 @@ bottomClient = html.div(
     }
 )
 
-widgets.arrangeTopBottom(clientTop, 80, welcomeConnectionsDiv, bottomClient)
+widgets.arrangeTopBottom(clientTop, 90, welcomeConnectionsDiv, bottomClient)
 
 html.centerHor(bottomClient)
 bottom = html.div({

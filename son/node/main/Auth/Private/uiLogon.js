@@ -1,17 +1,18 @@
 pfun(clientId, url)
 
-provider = authProvider(clientId, url)
-result = await provider.login()
+auth = authProvider(clientId, url)
+result = await auth.login()
 
 yes(result.ok)
 id = createConnectionId(url)
 connectionData = {
+    id: id,
     url: url,
-    token: result.token,
-    clientId: clientId
+    clientId: clientId,
+    account: result.account
 }
 saveConnectionData(id, connectionData)
-authentications[url] = provider
+startSaving(auth, url, id)
 return {ok:true}
 
 no(result.ok)
