@@ -90,10 +90,9 @@ async function createConnection(event, clientId, url) {
             ok: false,
             message: 'ERR_CONNECTION_EXISTS'
         };
-    } else {
-        logonResult = await uiLogon(clientId, url);
-        return logonResult;
     }
+    logonResult = await uiLogon(clientId, url);
+    return logonResult;
 }
 
 function getConnections() {
@@ -114,9 +113,8 @@ async function getToken(event, url) {
     if (result.ok) {
         startSaving(auth, url, id);
         return result;
-    } else {
-        return result;
     }
+    return result;
 }
 
 function removeConnection(event, url) {
@@ -137,15 +135,14 @@ function getOrDeserializeAuth(conn) {
     id = conn.id;
     if (id in authentications) {
         return authentications[id];
-    } else {
-        clientId = conn.clientId;
-        url = conn.url;
-        auth = authProvider(clientId, url);
-        key = id + '-auth.json';
-        content = storage.getItem(key);
-        auth.load(conn.account, content);
-        return auth;
     }
+    clientId = conn.clientId;
+    url = conn.url;
+    auth = authProvider(clientId, url);
+    key = id + '-auth.json';
+    content = storage.getItem(key);
+    auth.load(conn.account, content);
+    return auth;
 }
 
 function loadConnectionData(id) {
@@ -182,9 +179,8 @@ async function uiLogon(clientId, url) {
         saveConnectionData(id, connectionData);
         startSaving(auth, url, id);
         return { ok: true };
-    } else {
-        return result;
     }
+    return result;
 }
 
 function findConnection(url) {

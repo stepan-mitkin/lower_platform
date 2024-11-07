@@ -83,12 +83,11 @@ async function handleSilentError(error) {
     if (error instanceof InteractionRequiredAuthError) {
         console.log('Silent token acquisition failed, acquiring token interactive', error);
         return await login();
-    } else {
-        return {
-            ok: false,
-            message: error.message
-        };
     }
+    return {
+        ok: false,
+        message: error.message
+    };
 }
 
 async function loginCore(completed) {

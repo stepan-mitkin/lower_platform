@@ -84,11 +84,10 @@ async function connectTo(url) {
     if (result.ok) {
         openExplorer(url);
         return;
-    } else {
-        widgets.hideWorking();
-        message = result.message || 'ERR_COULD_NOT_CONNECT_TO_DATAVERSE';
-        widgets.errorSnack(tr(message));
     }
+    widgets.hideWorking();
+    message = result.message || 'ERR_COULD_NOT_CONNECT_TO_DATAVERSE';
+    widgets.errorSnack(tr(message));
 }
 
 function createNewConnection() {
@@ -303,9 +302,8 @@ function get(id) {
     element = document.getElementById(id);
     if (element) {
         return element;
-    } else {
-        throw new Error('Element not found: ' + id);
     }
+    throw new Error('Element not found: ' + id);
 }
 
 function img(src, alt) {
@@ -387,21 +385,21 @@ function applyArgument(arg, element) {
         if (typeof arg === 'string') {
             element.className = arg;
             return;
-        } else {
-            if (typeof arg === 'object') {
-                if (arg.nodeType) {
-                    element.appendChild(arg);
-                } else {
-                    if (Array.isArray(arg)) {
-                        arg.forEach(child => element.appendChild(child));
-                        return;
-                    } else {
-                        objFor(arg, setElementProperty, element);
-                        return;
-                    }
+        }
+        if (typeof arg === 'object') {
+            if (arg.nodeType) {
+                element.appendChild(arg);
+            } else {
+                if (Array.isArray(arg)) {
+                    arg.forEach(child => element.appendChild(child));
+                    return;
                 }
+                objFor(arg, setElementProperty, element);
+                return;
             }
         }
+    } else {
+        return;
     }
 }
 
@@ -583,9 +581,8 @@ function __compute_clientId() {
     result = clientIdInput.value.trim();
     if (result) {
         return result;
-    } else {
-        throw new Error('ERR_CLIENT_ID_IS_EMPTY');
     }
+    throw new Error('ERR_CLIENT_ID_IS_EMPTY');
 }
 
 async function __compute_connection() {
@@ -593,15 +590,13 @@ async function __compute_connection() {
     result = await window.api.createConnection(clientId, url);
     if (result.ok) {
         return { url: url };
-    } else {
-        if (result.message) {
-            console.error(result);
-            throw new Error(result.message);
-        } else {
-            console.error(result);
-            throw new Error('ERR_COULD_NOT_CONNECT_TO_DATAVERSE');
-        }
     }
+    if (result.message) {
+        console.error(result);
+        throw new Error(result.message);
+    }
+    console.error(result);
+    throw new Error('ERR_COULD_NOT_CONNECT_TO_DATAVERSE');
 }
 
 function __compute_url() {
@@ -611,15 +606,12 @@ function __compute_url() {
         if (trimmed.startsWith('https://')) {
             if (trimmed.endsWith('/')) {
                 return trimmed;
-            } else {
-                return trimmed + '/';
             }
-        } else {
-            throw new Error('ERR_URL_MUST_START_WITH_HTTPS');
+            return trimmed + '/';
         }
-    } else {
-        throw new Error('ERR_DYNAMICS_URL_IS_EMPTY');
+        throw new Error('ERR_URL_MUST_START_WITH_HTTPS');
     }
+    throw new Error('ERR_DYNAMICS_URL_IS_EMPTY');
 }
 
 return {
